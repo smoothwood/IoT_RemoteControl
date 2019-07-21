@@ -63,15 +63,19 @@
 #include "CircularByteBuffer.h"
 
 //Wifi
-char wifi_ssid[]       = "your wifi ssid";
-char wifi_password[]   = "your wifi password";
+char wifi_ssid[]       = "ssid";
+char wifi_password[]   = "password";
+char wifi_ssid1[] = "ssid1";
+char wifi_password1[] = "password";
+char wifi_ssid2[] = "ssid2";
+char wifi_password2[] = "password2";
 ESP8266WiFiMulti WiFiMulti;
 
 
 //AWS IOT config, change these:
-char aws_endpoint[]    = "a3f3ep261pa8dz-ats.iot.ap-northeast-1.amazonaws.com";
-char aws_key[]         = "your aws IoT access key ID";
-char aws_secret[]      = "your aws IoT secret key";
+char aws_endpoint[]    = "xxxx.iot.ap-northeast-1.amazonaws.com";
+char aws_key[]         = "your secret key id";
+char aws_secret[]      = "your secret key";
 char aws_region[]      = "ap-northeast-1";
 const char* aws_topic  = "remotecontroltopic"; // set topic, publish message to this topic
 int port = 443;
@@ -102,6 +106,10 @@ char* generateClientID () {
 
 //count messages arrived
 int arrivedcount = 0;
+
+//flag to indicate if IR code is from ESP12E itself
+
+unsigned long timeIROutFromESP12E;
 
 //callback to handle mqtt messages
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -150,7 +158,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
     for(int i = 0; i<codeLength; i++){
       rawData[i] = getValue(code,' ',i).toInt();
     }
-    irsend.sendRaw(rawData, sizeof(rawData) / sizeof(rawData[0]), 38);     
+    timeIROutFromESP12E = millis();
+    irsend.sendRaw(rawData, sizeof(rawData) / sizeof(rawData[0]), 38);
   }
   // Test code
   /*
@@ -424,7 +433,7 @@ void setup() {
   // Ignore messages with less than minimum on or off pulses.
   irrecv.setUnknownThreshold(kMinUnknownSize);
 #endif                  // DECODE_HASH
-  irrecv.enableIRIn();  // Start the receiver
+  irrecv.enableIRIn();  // Start the receiverwifiMulti.addAP
 
   // Connect Wifi
   wifi_set_sleep_type(NONE_SLEEP_T);
@@ -432,8 +441,12 @@ void setup() {
   delay (2000);
   Serial.setDebugOutput(1);
 
+  WiFi.mode(WIFI_STA);
   //fill with ssid and wifi password
   WiFiMulti.addAP(wifi_ssid, wifi_password);
+  WiFiMulti.addAP(wifi_ssid1, wifi_password1);
+  WiFiMulti.addAP(wifi_ssid2, wifi_password2);
+  //WiFiMulti.addAP(wifi_ssid3, wifi_password3);
   Serial.println ("connecting to wifi");
   while(WiFiMulti.run() != WL_CONNECTED) {
       delay(100);
@@ -473,6 +486,9 @@ void loop() {
   
   // Check if the IR code has been received.
   if (irrecv.decode(&results)) {
+    if (millis()-timeIROutFromESP12E<5000){
+      return;
+    }
     // Display a crude timestamp.
     uint32_t now = millis();
     Serial.printf("Timestamp : %06u.%03u\n", now / 1000, now % 1000);
