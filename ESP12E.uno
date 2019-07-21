@@ -73,7 +73,7 @@ ESP8266WiFiMulti WiFiMulti;
 
 
 //AWS IOT config, change these:
-char aws_endpoint[]    = "xxxx.iot.ap-northeast-1.amazonaws.com";
+char aws_endpoint[]    = "xxxxx.iot.ap-northeast-1.amazonaws.com";
 char aws_key[]         = "your secret key id";
 char aws_secret[]      = "your secret key";
 char aws_region[]      = "ap-northeast-1";
