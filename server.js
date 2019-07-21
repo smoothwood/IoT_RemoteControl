@@ -36,7 +36,7 @@ client.on('connect', function () {
 //})
  
 app.listen(80,function () {
-    console.log("http://101.132.104.40:80")
+    console.log("http://your server address:80")
 })
  
 // call from mobile
